@@ -18,7 +18,6 @@ public class SwingDataChangeListener : MonoBehaviour
 
     private void OnXRotationChanged(float value)
     {
-        
         swing.fromRotation.RuntimeValue.x = value;
         swing.toRotation.RuntimeValue.x = value;
         calculatePredictionEvent.Raise();

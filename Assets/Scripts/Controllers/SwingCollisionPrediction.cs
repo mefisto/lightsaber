@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class SwingCollisionPrediction : MonoBehaviour
@@ -22,6 +23,11 @@ public class SwingCollisionPrediction : MonoBehaviour
     private void OnDisable()
     {
         calculatePredictionEvent.RemoveListener(OnCalculatePrediction);
+    }
+
+    private void Start()
+    {
+        //OnCalculatePrediction();
     }
 
     private void OnDrawGizmos()
@@ -51,49 +57,44 @@ public class SwingCollisionPrediction : MonoBehaviour
         var angleA = Quaternion.Angle(fromRotALocal, toRotALocal)* swingA.duration;
         var angleB = Quaternion.Angle(fromRotALocal, toRotALocal)* swingB.duration;
         var stepCount = Mathf.FloorToInt(Mathf.Max(angleA, angleB) / angleResolution);
-
-        var collisionPredictionResult = new CollisionPredictionResult();
+        var result = new CollisionPredictionResult();
         float step = 0;
-        float smallestDistance = float.MaxValue;
-        float smallestDistanceTime=0;
         while (step < stepCount)
         {
             var t = step / stepCount;
-            var posASwing = StepSwing(posA, rotA, fromRotALocal, toRotALocal, lightsaberA.Length, t);
-            var posBSwing = StepSwing(posB, rotB, fromRotBLocal, toRotBLocal, lightsaberB.Length, t);
-            Vector3 pointOnA;
-            Vector3 pointOnB;
-            MathHelper.ClosestPointsOnTwoLines(out pointOnA, out pointOnB, posA, posA - posASwing, posB, posB - posBSwing);
-            var distance = Vector3.Distance(pointOnA, pointOnB);
-            if (distance < smallestDistance)
-            {
-                smallestDistance = distance;
-                smallestDistanceTime = t;
-            }
-
-            if (distance <= averageLightsaberRadius)
-            {
-                var a =MathHelper.IsPointOnLineSegment(posA, posASwing, pointOnA);
-                var b = MathHelper.IsPointOnLineSegment(posB, posBSwing, pointOnB);
-                if (a && b)
-                {
-                    collisionPredictionResult.hasCollision = true;
-                    collisionPredictionResult.collisionPosition = (pointOnA+pointOnB)/2f;
-                    collisionPredictionResult.time = t;
-                    break;
-                }
-            }
-
+            var stepResult = Step(posA, rotA, fromRotALocal, toRotALocal, t, posB, rotB, fromRotBLocal, toRotBLocal,
+                result);
+            if (stepResult) break;
             step++;
         }
+        collisionPredictionResultEvent.Raise(result);
+    }
 
-        /*if (!collisionPredictionResult.hasCollision)
+    private bool Step(Vector3 posA, Quaternion rotA, Quaternion fromRotALocal, Quaternion toRotALocal, float t,
+        Vector3 posB, Quaternion rotB, Quaternion fromRotBLocal, Quaternion toRotBLocal,
+        CollisionPredictionResult result)
+    {
+ 
+        var posASwing = StepSwing(posA, rotA, fromRotALocal, toRotALocal, lightsaberA.Length, t);
+        var posBSwing = StepSwing(posB, rotB, fromRotBLocal, toRotBLocal, lightsaberB.Length, t);
+        Vector3 pointOnA;
+        Vector3 pointOnB;
+        MathHelper.ClosestPointsOnTwoLines(out pointOnA, out pointOnB, posA, posA - posASwing, posB, posB - posBSwing);
+        var distance = Vector3.Distance(pointOnA, pointOnB);
+        if (distance <= averageLightsaberRadius)
         {
-            Debug.Log("No Collision Time:"+smallestDistanceTime+" Distance:"+smallestDistance);
-        }*/
+            var a = MathHelper.IsPointOnLineSegment(posA, posASwing, pointOnA);
+            var b = MathHelper.IsPointOnLineSegment(posB, posBSwing, pointOnB);
+            if (a && b)
+            {
+                result.hasCollision = true;
+                result.collisionPosition = (pointOnA + pointOnB) / 2f;
+                result.time = t;
+                return true;
+            }
+        }
 
-        collisionPredictionResultEvent.Raise(collisionPredictionResult);
-       // Debug.Log("cp:"+collisionPredictionResult.hasCollision+ " d: "+smallestDistance+" t:"+smallestDistanceTime);
+        return false;
     }
 
     private Vector3 StepSwing(Vector3 pos, Quaternion rot, Quaternion fromRotLocal, Quaternion toRotLocal, float height,

@@ -4,18 +4,16 @@ public class XAxisRangeRotator : MonoBehaviour
 {
     [SerializeField] private Transform targetTransform;
     [SerializeField] private FloatGameEvent rotationChangedEvent;
+    [SerializeField] private LightsaberSwingData swingData;
     [SerializeField] private FloatVariable minAngle;
     [SerializeField] private FloatVariable maxAngle;
     [SerializeField] private FloatGameEvent afterXAngleChangeEvent;
-    private Quaternion maxRot;
-
-    private Quaternion minRot;
+    [SerializeField] private FloatGameEvent sliderDefaultValueChangeEvent;
 
     private void Start()
     {
         var current = targetTransform.localRotation.eulerAngles;
-        minRot = Quaternion.Euler(minAngle.Value, current.y, current.z);
-        maxRot = Quaternion.Euler(maxAngle.Value, current.y, current.z);
+        sliderDefaultValueChangeEvent.Raise(Mathf.InverseLerp(minAngle.Value,maxAngle.Value,current.x));
     }
 
     private void OnEnable()
@@ -30,8 +28,9 @@ public class XAxisRangeRotator : MonoBehaviour
 
     private void OnRotationChange(float value)
     {
-        var rot = Quaternion.Lerp(minRot, maxRot, value);
+        var xAngle= Mathf.Lerp(minAngle.Value, maxAngle.Value, value);
+        var rot = Quaternion.Euler(xAngle, swingData.fromRotation.RuntimeValue.y, swingData.fromRotation.RuntimeValue.z);
         targetTransform.localRotation = rot;
-        afterXAngleChangeEvent.Raise(Mathf.Lerp(minAngle.Value,maxAngle.Value,value));
+        afterXAngleChangeEvent.Raise(xAngle);
     }
 }
