@@ -24,11 +24,7 @@ public class SwingCollisionPrediction : MonoBehaviour
     {
         calculatePredictionEvent.RemoveListener(OnCalculatePrediction);
     }
-
-    private void Start()
-    {
-        //OnCalculatePrediction();
-    }
+    
 
     private void OnDrawGizmos()
     {
@@ -97,7 +93,7 @@ public class SwingCollisionPrediction : MonoBehaviour
         return false;
     }
 
-    private Vector3 StepSwing(Vector3 pos, Quaternion rot, Quaternion fromRotLocal, Quaternion toRotLocal, float height,
+    private static Vector3 StepSwing(Vector3 pos, Quaternion rot, Quaternion fromRotLocal, Quaternion toRotLocal, float height,
         float t)
     {
         var top = Vector3.up * height;

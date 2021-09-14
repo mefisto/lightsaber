@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Create Lightsaber Swing Data", fileName = "Lightsaber Swing Data", order = 0)]
